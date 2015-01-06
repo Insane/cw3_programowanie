@@ -3,12 +3,12 @@
 /***************************************************************************
  Pogoda
                                  A QGIS plugin
- To jest wtyczka zrobiona na ćw z Programowania w GIS
+ Zadanie na programowanie w GIS
                               -------------------
-        begin                : 2014-12-20
+        begin                : 2015-01-02
         git sha              : $Format:%H$
-        copyright            : (C) 2014 by PB
-        email                : paulina.bednar@gmail.com
+        copyright            : (C) 2015 by PB
+        email                : insane.m@wp.pl
  ***************************************************************************/
 
 /***************************************************************************
@@ -20,14 +20,19 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
+
+from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
 from PyQt4.QtGui import QAction, QIcon
+from qgis.core import *
+
 # Initialize Qt resources from file resources.py
 import resources_rc
 # Import the code for the dialog
-from pogoda_dialog import PogodaDialog
+from Pogoda_PB_dialog import PogodaDialog
 import os.path
-
+import json, urllib
+import time, calendar
+from sgmllib import SGMLParser
 
 class Pogoda:
     """QGIS Plugin Implementation."""
@@ -63,7 +68,7 @@ class Pogoda:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Pogoda_PB')
+        self.menu = self.tr(u'&PB_Pogoda')
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'Pogoda')
         self.toolbar.setObjectName(u'Pogoda')
@@ -163,7 +168,7 @@ class Pogoda:
         icon_path = ':/plugins/Pogoda/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'Pokaz'),
+            text=self.tr(u'Pogoda'),
             callback=self.run,
             parent=self.iface.mainWindow())
 
@@ -172,7 +177,7 @@ class Pogoda:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&Pogoda_PB'),
+                self.tr(u'&PB_Pogoda'),
                 action)
             self.iface.removeToolBarIcon(action)
 
@@ -185,6 +190,78 @@ class Pogoda:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            pass
+			#sciezka do shape z BDO z wojewodztwami, u mnie w folderze z wtyczka
+			shape=os.path.join("c:/Users/Samsung/.qgis2/python/plugins/Pogoda/shp/admin_region_teryt_woj.shp")
+			#warstwa wojewodztw wczytana do programu
+			warstwa=QgsVectorLayer(shape,"Wojewodztwa","ogr")
+			warstwa.startEditing()
+			#dodanie odpowiednich kolumn atrybutow pogodowych do danych
+			kol_pogoda=["TEMP","TEMP_MAX","TEMP_MIN", "CISNIENIE","WILGOTNOSC","V_WIATRU","K_WIATRU","CHMURY"]
+			for i in kol_pogoda:
+				if warstwa.dataProvider().fieldNameIndex(i)==-1:
+					warstwa.dataProvider().addAttributes([QgsField(i,QVariant.Double)])
+			warstwa.updateFields()
+
+			#sciezka do pliku json z danymi o pogodzie
+			dane=os.path.join("c:/Users/Samsung/.qgis2/python/plugins/Pogoda/wojewo.json")
+
+			#link do sciagniecia danych z internetow
+			link="http://api.openweathermap.org/data/2.5/group?units=metric&id="
+			wojewodztwaID=[3337493,3337499,3337496,858788,858786,3337497,3337492,858790,3337495,858785,858787,3337498,3337500,3337494,858789,858791]
+			for id in wojewodztwaID:
+				link=link+str(wojewodztwaID)+","
+			
+			try:
+				f=open(dane,'r')
+			except IOError:
+				f=open(dane,'w+')
+			czytaj=f.read()
+			f.close()
+			
+			try:
+				dane3=json.loads(czytaj)
+				data1=dane3['data']
+			except ValueError:
+				czas1=0
+			czas2=calendar.timegm(time.gmtime())
+			if czas2-czas1>600:
+				f=open(dane,'w+')
+				usock = urllib.urlopen(link)
+				zrodlo = usock.read()
+				usock.close()
+				dane2=json.loads(zrodlo)
+				dane2['data']=calendar.timegm(time.gmtime())
+				f.write(json.dumps(dane2,f))
+				f.close()
+			else:
+				dane2=dane3
+						
+			#transformacja ukladu, aby porownac wspolrzedne
+			newCrs=QgsCoordinateReferenceSystem(2180)
+			oldCrs=QgsCoordinateReferenceSystem(4326)
+			transformacja=QgsCoordinateTransform(oldCrs, newCrs) 
+			
+			#uaktualnianie danych o pogodzie
+			warstwa.startEditing()
+			pogoda=dane2['list']
+			for i in range(0,len(pogoda)):
+				temperatura=pogoda[i]['main']['temp']
+				temperatura_max=pogoda[i]['main']['temp_max']
+				temperatura_min=pogoda[i]['main']['temp_min']
+				cisnienie=pogoda[i]['main']['pressure']
+				wilgotnosc=pogoda[i]['main']['humidity']
+				predkosc_wiatru=pogoda[i]['wind']['speed']
+				kier_wiatru=pogoda[i]['wind']['deg']
+				chmury=pogoda[i]['clouds']['all']
+				wartosci=[temperatura, temperatura_max, temperatura_min, cisnienie, wilgotnosc, predkosc_wiatru, kier_wiatru,chmury]
+				srodek=QgsPoint(pogoda[i]['coord']['lon'],pogoda[i]['coord']['lat'])
+				srodek2=transformacja.transform(srodek)
+				for element in warstwa.getFeatures():
+					if element.geometry().contains(QgsGeometry.fromPoint(srodek)):
+						for k in xrange(0,len(kol_pogoda)):
+							element.setAttribute(kol_pogoda[i],wartosci[i])
+						warstwa.updateFeature(element)
+			warstwa.commitChanges()
+			QgsMapLayerRegistry.instance().addMapLayer(warstwa)	
+			warstwa.updateExtents()
+			pass

@@ -1,12 +1,12 @@
 #/***************************************************************************
 # Pogoda
 #
-# To jest wtyczka zrobiona na ćw z Programowania w GIS
+# Zadanie na programowanie w GIS
 #							 -------------------
-#		begin				: 2014-12-20
+#		begin				: 2015-01-02
 #		git sha				: $Format:%H$
-#		copyright			: (C) 2014 by PB
-#		email				: paulina.bednar@gmail.com
+#		copyright			: (C) 2015 by PB
+#		email				: insane.m@wp.pl
 # ***************************************************************************/
 #
 #/***************************************************************************
@@ -38,17 +38,17 @@ LOCALES =
 # translation
 SOURCES = \
 	__init__.py \
-	pogoda.py \
-	pogoda_dialog.py
+	Pogoda_PB.py \
+	Pogoda_PB_dialog.py
 
 PLUGINNAME = Pogoda
 
 PY_FILES = \
-	pogoda.py \
-	pogoda_dialog.py \
+	Pogoda_PB.py \
+	Pogoda_PB_dialog.py \
 	__init__.py
 
-UI_FILES = pogoda_dialog_base.ui
+UI_FILES = Pogoda_PB_dialog_base.ui
 
 EXTRAS = icon.png metadata.txt
 

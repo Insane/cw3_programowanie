@@ -8,9 +8,9 @@
 
 """
 
-__author__ = 'paulina.bednar@gmail.com'
-__date__ = '2014-12-20'
-__copyright__ = 'Copyright 2014, PB'
+__author__ = 'insane.m@wp.pl'
+__date__ = '2015-01-02'
+__copyright__ = 'Copyright 2015, PB'
 
 import unittest
 

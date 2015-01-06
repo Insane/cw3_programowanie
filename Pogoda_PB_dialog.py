@@ -3,12 +3,12 @@
 /***************************************************************************
  PogodaDialog
                                  A QGIS plugin
- To jest wtyczka zrobiona na ćw z Programowania w GIS
+ Zadanie na programowanie w GIS
                              -------------------
-        begin                : 2014-12-20
+        begin                : 2015-01-02
         git sha              : $Format:%H$
-        copyright            : (C) 2014 by PB
-        email                : paulina.bednar@gmail.com
+        copyright            : (C) 2015 by PB
+        email                : insane.m@wp.pl
  ***************************************************************************/
 
 /***************************************************************************
@@ -26,7 +26,7 @@ import os
 from PyQt4 import QtGui, uic
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'pogoda_dialog_base.ui'))
+    os.path.dirname(__file__), 'Pogoda_PB_dialog_base.ui'))
 
 
 class PogodaDialog(QtGui.QDialog, FORM_CLASS):

@@ -1,7 +1,7 @@
 Plugin Builder Results
 
 Your plugin Pogoda was created in:
-    D:/GiK/Studia mgr/Semestr 2/Programowanie/cw3_programowanie\Pogoda
+    C:/Users/Samsung/.qgis2/python/plugins\Pogoda
 
 Your QGIS plugin directory is located at:
     C:/Users/Samsung/.qgis2/python/plugins
@@ -17,7 +17,7 @@ What's Next:
 
   * Test the plugin by enabling it in the QGIS plugin manager
 
-  * Customize it by editing the implementation file: ``pogoda.py``
+  * Customize it by editing the implementation file: ``Pogoda_PB.py``
 
   * Create your own custom icon, replacing the default icon.png
 

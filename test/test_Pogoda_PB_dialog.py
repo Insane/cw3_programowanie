@@ -8,15 +8,15 @@
 
 """
 
-__author__ = 'paulina.bednar@gmail.com'
-__date__ = '2014-12-20'
-__copyright__ = 'Copyright 2014, PB'
+__author__ = 'insane.m@wp.pl'
+__date__ = '2015-01-02'
+__copyright__ = 'Copyright 2015, PB'
 
 import unittest
 
 from PyQt4.QtGui import QDialogButtonBox, QDialog
 
-from pogoda_dialog import PogodaDialog
+from Pogoda_PB_dialog import PogodaDialog
 
 from utilities import get_qgis_app
 QGIS_APP = get_qgis_app()

@@ -3,11 +3,11 @@
 /***************************************************************************
  Pogoda
                                  A QGIS plugin
- To jest wtyczka zrobiona na ćw z Programowania w GIS
+ Zadanie na programowanie w GIS
                              -------------------
-        begin                : 2014-12-20
-        copyright            : (C) 2014 by PB
-        email                : paulina.bednar@gmail.com
+        begin                : 2015-01-02
+        copyright            : (C) 2015 by PB
+        email                : insane.m@wp.pl
         git sha              : $Format:%H$
  ***************************************************************************/
 
@@ -31,5 +31,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :type iface: QgsInterface
     """
     #
-    from .pogoda import Pogoda
+    from .Pogoda_PB import Pogoda
     return Pogoda(iface)
