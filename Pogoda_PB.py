@@ -220,7 +220,7 @@ class Pogoda:
 			
 			try:
 				dane3=json.loads(czytaj)
-				data1=dane3['data']
+				czas1=dane3['data']
 			except ValueError:
 				czas1=0
 			czas2=calendar.timegm(time.gmtime())
@@ -235,11 +235,6 @@ class Pogoda:
 				f.close()
 			else:
 				dane2=dane3
-						
-			#transformacja ukladu, aby porownac wspolrzedne
-			newCrs=QgsCoordinateReferenceSystem(2180)
-			oldCrs=QgsCoordinateReferenceSystem(4326)
-			transformacja=QgsCoordinateTransform(oldCrs, newCrs) 
 			
 			#uaktualnianie danych o pogodzie
 			warstwa.startEditing()
@@ -254,12 +249,10 @@ class Pogoda:
 				kier_wiatru=pogoda[i]['wind']['deg']
 				chmury=pogoda[i]['clouds']['all']
 				wartosci=[temperatura, temperatura_max, temperatura_min, cisnienie, wilgotnosc, predkosc_wiatru, kier_wiatru,chmury]
-				srodek=QgsPoint(pogoda[i]['coord']['lon'],pogoda[i]['coord']['lat'])
-				srodek2=transformacja.transform(srodek)
 				for element in warstwa.getFeatures():
-					if element.geometry().contains(QgsGeometry.fromPoint(srodek)):
 						for k in xrange(0,len(kol_pogoda)):
-							element.setAttribute(kol_pogoda[i],wartosci[i])
+							for z in xrange(0,len(wartosci)):
+								element.setAttribute(kol_pogoda[k],wartosci[z])
 						warstwa.updateFeature(element)
 			warstwa.commitChanges()
 			QgsMapLayerRegistry.instance().addMapLayer(warstwa)	
