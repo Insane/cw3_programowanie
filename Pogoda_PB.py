@@ -208,37 +208,42 @@ class Pogoda:
 			#link do sciagniecia danych z internetow
 			link="http://api.openweathermap.org/data/2.5/group?units=metric&id="
 			wojewodztwaID=[3337493,3337499,3337496,858788,858786,3337497,3337492,858790,3337495,858785,858787,3337498,3337500,3337494,858789,858791]
+			
 			for id in wojewodztwaID:
 				link=link+str(wojewodztwaID)+","
 			
-			try:
-				f=open(dane,'r')
-			except IOError:
-				f=open(dane,'w+')
-			czytaj=f.read()
-			f.close()
+			t_teraz=calendar.timegm(time.gmtime())
 			
 			try:
-				dane3=json.loads(czytaj)
-				czas1=dane3['data']
+				plik=open(dane,'r')
+			except IOError:
+				plik=open(dane,'w+')
+			plikdane=plik.read()
+			plik.close()
+			
+			try:
+				dane3=json.loads(plikdane)
+				if 'data' in dane3:
+					t_dane=dane3['data']
+				else:
+					t_dane=0
 			except ValueError:
-				czas1=0
-			czas2=calendar.timegm(time.gmtime())
-			if czas2-czas1>600:
-				f=open(dane,'w+')
-				usock = urllib.urlopen(link)
-				zrodlo = usock.read()
-				usock.close()
-				dane2=json.loads(zrodlo)
-				dane2['data']=calendar.timegm(time.gmtime())
-				f.write(json.dumps(dane2,f))
-				f.close()
+				t_dane=0
+						
+			if t_teraz-t_dane>600:
+				plik2=open(dane,'w+')
+				odp=urllib.urlopen(link)
+				dane2=json.loads(odp.read())
+				odp.close()
+				plik2.write(json.dumps(dane2,plik2))
+				plik2.close()
 			else:
 				dane2=dane3
 			
 			#uaktualnianie danych o pogodzie
 			warstwa.startEditing()
 			pogoda=dane2['list']
+			wartosci2=[]
 			for i in range(0,len(pogoda)):
 				temperatura=pogoda[i]['main']['temp']
 				temperatura_max=pogoda[i]['main']['temp_max']
@@ -249,11 +254,13 @@ class Pogoda:
 				kier_wiatru=pogoda[i]['wind']['deg']
 				chmury=pogoda[i]['clouds']['all']
 				wartosci=[temperatura, temperatura_max, temperatura_min, cisnienie, wilgotnosc, predkosc_wiatru, kier_wiatru,chmury]
-				for element in warstwa.getFeatures():
-						for k in xrange(0,len(kol_pogoda)):
-							for z in xrange(0,len(wartosci)):
-								element.setAttribute(kol_pogoda[k],wartosci[z])
-						warstwa.updateFeature(element)
+				wartosci2.append(wartosci)
+			it=-1
+			for element in warstwa.getFeatures():
+				it=it+1
+				for k in xrange(0, len(kol_pogoda)):
+						element.setAttribute(kol_pogoda[k],wartosci2[it][k])
+				warstwa.updateFeature(element)
 			warstwa.commitChanges()
 			QgsMapLayerRegistry.instance().addMapLayer(warstwa)	
 			warstwa.updateExtents()
