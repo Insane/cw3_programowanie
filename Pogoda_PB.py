@@ -20,10 +20,12 @@
  *                                                                         *
  ***************************************************************************/
 """
-
+from PyQt4 import QtGui,QtCore 
 from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication,QVariant
-from PyQt4.QtGui import QAction, QIcon
+from PyQt4.QtGui import QAction, QIcon, QImage, QPainter
 from qgis.core import *
+from qgis.gui import *
+from qgis.utils import *
 
 # Initialize Qt resources from file resources.py
 import resources_rc
@@ -206,18 +208,14 @@ class Pogoda:
 			dane=os.path.join("c:/Users/Samsung/.qgis2/python/plugins/Pogoda/wojewo.json")
 
 			#link do sciagniecia danych z internetow
-			link="http://api.openweathermap.org/data/2.5/group?units=metric&id="
-			wojewodztwaID=[3337493,3337499,3337496,858788,858786,3337497,3337492,858790,3337495,858785,858787,3337498,3337500,3337494,858789,858791]
-			
-			for id in wojewodztwaID:
-				link=link+str(wojewodztwaID)+","
-			
+			link="http://api.openweathermap.org/data/2.5/group?units=metric&id=858791,3337496,3337499,3337500,858789,858785,858787,3337494,3337493,3337498,858790,3337492,3337495,3337497,858788,858786"
+		
 			t_teraz=calendar.timegm(time.gmtime())
 			
 			try:
 				plik=open(dane,'r')
 			except IOError:
-				plik=open(dane,'w+')
+				plik=open(dane,'w')
 			plikdane=plik.read()
 			plik.close()
 			
@@ -231,7 +229,7 @@ class Pogoda:
 				t_dane=0
 						
 			if t_teraz-t_dane>600:
-				plik2=open(dane,'w+')
+				plik2=open(dane,'w')
 				odp=urllib.urlopen(link)
 				dane2=json.loads(odp.read())
 				odp.close()
@@ -244,6 +242,9 @@ class Pogoda:
 			warstwa.startEditing()
 			pogoda=dane2['list']
 			wartosci2=[]
+			ikonki=[]
+			link_ikonki="http://openweathermap.org/img/w/"
+
 			for i in range(0,len(pogoda)):
 				temperatura=pogoda[i]['main']['temp']
 				temperatura_max=pogoda[i]['main']['temp_max']
@@ -253,7 +254,9 @@ class Pogoda:
 				predkosc_wiatru=pogoda[i]['wind']['speed']
 				kier_wiatru=pogoda[i]['wind']['deg']
 				chmury=pogoda[i]['clouds']['all']
+				ikonka=pogoda[i]['weather'][0]['icon']
 				wartosci=[temperatura, temperatura_max, temperatura_min, cisnienie, wilgotnosc, predkosc_wiatru, kier_wiatru,chmury]
+				ikonki.append(ikonka)
 				wartosci2.append(wartosci)
 			it=-1
 			for element in warstwa.getFeatures():
@@ -264,4 +267,61 @@ class Pogoda:
 			warstwa.commitChanges()
 			QgsMapLayerRegistry.instance().addMapLayer(warstwa)	
 			warstwa.updateExtents()
+			
+			
+			class PointTool(QgsMapTool):   
+				def __init__(self, canvas):
+					QgsMapTool.__init__(self, canvas)
+					self.canvas = canvas    
+				def canvasPressEvent(self, event):
+					pass
+				def canvasMoveEvent(self, event):
+					x = event.pos().x()
+					y = event.pos().y()
+					point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
+				def canvasReleaseEvent(self, event):
+					#Get the click
+					x = event.pos().x()
+					y = event.pos().y()
+					point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
+					for element in warstwa.getFeatures():
+						if element.geometry().contains(point):
+							a=QgsTextAnnotationItem(iface.mapCanvas())
+							tekst=" Temperatura: "+str(element.attributes()[warstwa.fieldNameIndex('TEMP')])+"st.C \n Cisnienie: "+str(element.attributes()[warstwa.fieldNameIndex('CISNIENIE')]) +" hPa \n Wilgotnosc: "+str(element.attributes()[warstwa.fieldNameIndex('WILGOTNOSC')])+" jednostek"
+							a.setDocument(QtGui.QTextDocument(tekst))
+							a.setMapPosition(point)
+							a.setFrameSize(QtCore.QSizeF(150,55)) 
+							a.setFrameBackgroundColor(QtGui.QColor("#00FF00")) 
+							a.setFrameColor(QtGui.QColor("#008000")) 
+							a.setFrameBorderWidth(3.0)
+							iface.mapCanvas().refresh()
+
+				def activate(self):
+					pass
+				def deactivate(self):
+					pass
+				def isZoomTool(self):
+					return False
+				def isTransient(self):
+					return False
+				def isEditTool(self):
+					return True			
+			
+			
+			tool=PointTool(iface.mapCanvas())
+			iface.mapCanvas().setMapTool(tool)
+			
+			widget = iface.messageBar().createMessage("Kliknij na wojewodztwo a zobaczysz pogode","    :)")
+			iface.messageBar().pushWidget(widget, QgsMessageBar.INFO)
+			#it2=-1
+			#for element in warstwa.getFeatures():
+				#it2=it2+1
+				#link2=link_ikonki+ikonki[it2]+".png"
+				#odp2=urllib.urlopen(link2)
+				#obrazek=odp2.read()
+				#odp2.close()
+				#obrazek2=QPixmap().loadFromData(obrazek)
+				#ikonka=QIcon(obrazek2,"png")			
+			
+			
 			pass
