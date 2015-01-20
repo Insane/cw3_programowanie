@@ -74,7 +74,7 @@ class Pogoda:
         # TODO: We are going to let the user set this up in a future iteration
         self.toolbar = self.iface.addToolBar(u'Pogoda')
         self.toolbar.setObjectName(u'Pogoda')
-
+		
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -215,7 +215,7 @@ class Pogoda:
 			try:
 				plik=open(dane,'r')
 			except IOError:
-				plik=open(dane,'w')
+				plik=open(dane,'w+')
 			plikdane=plik.read()
 			plik.close()
 			
@@ -229,7 +229,7 @@ class Pogoda:
 				t_dane=0
 						
 			if t_teraz-t_dane>600:
-				plik2=open(dane,'w')
+				plik2=open(dane,'w+')
 				odp=urllib.urlopen(link)
 				dane2=json.loads(odp.read())
 				odp.close()
@@ -268,8 +268,18 @@ class Pogoda:
 			QgsMapLayerRegistry.instance().addMapLayer(warstwa)	
 			warstwa.updateExtents()
 			
+			symbol = QgsSymbolV2.defaultSymbol(QGis.Polygon)
+			styl = QgsSimpleFillSymbolLayerV2(QtGui.QColor("#CCFFCC")) 
+			styl.setBorderColor(QtGui.QColor("#339966")) 
+			styl.setBorderWidth(1.0) 
+ 			symbol.appendSymbolLayer(styl) 
+			symbol.deleteSymbolLayer(0)
+			renderer_s = QgsSingleSymbolRendererV2(symbol) 
+			warstwa.setRendererV2(renderer_s) 
+			iface.mapCanvas().refresh() 
 			
 			class PointTool(QgsMapTool):   
+
 				def __init__(self, canvas):
 					QgsMapTool.__init__(self, canvas)
 					self.canvas = canvas    
@@ -280,22 +290,23 @@ class Pogoda:
 					y = event.pos().y()
 					point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
 				def canvasReleaseEvent(self, event):
+					
 					#Get the click
 					x = event.pos().x()
 					y = event.pos().y()
 					point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
+					a=QgsTextAnnotationItem(iface.mapCanvas())
 					for element in warstwa.getFeatures():
 						if element.geometry().contains(point):
-							a=QgsTextAnnotationItem(iface.mapCanvas())
-							tekst=" Temperatura: "+str(element.attributes()[warstwa.fieldNameIndex('TEMP')])+"st.C \n Cisnienie: "+str(element.attributes()[warstwa.fieldNameIndex('CISNIENIE')]) +" hPa \n Wilgotnosc: "+str(element.attributes()[warstwa.fieldNameIndex('WILGOTNOSC')])+" jednostek"
+							tekst=" Temperatura: "+str(element.attributes()[warstwa.fieldNameIndex('TEMP')])+" st.C \n Cisnienie: "+str(element.attributes()[warstwa.fieldNameIndex('CISNIENIE')]) +" hPa \n Wilgotnosc: "+str(element.attributes()[warstwa.fieldNameIndex('WILGOTNOSC')])+" jednostek"
 							a.setDocument(QtGui.QTextDocument(tekst))
 							a.setMapPosition(point)
 							a.setFrameSize(QtCore.QSizeF(150,55)) 
-							a.setFrameBackgroundColor(QtGui.QColor("#00FF00")) 
-							a.setFrameColor(QtGui.QColor("#008000")) 
+							a.setFrameBackgroundColor(QtGui.QColor("#F5A9A9")) 
+							a.setFrameColor(QtGui.QColor("#DF0101")) 
 							a.setFrameBorderWidth(3.0)
 							iface.mapCanvas().refresh()
-
+					
 				def activate(self):
 					pass
 				def deactivate(self):
@@ -311,6 +322,7 @@ class Pogoda:
 			tool=PointTool(iface.mapCanvas())
 			iface.mapCanvas().setMapTool(tool)
 			
+
 			widget = iface.messageBar().createMessage("Kliknij na wojewodztwo a zobaczysz pogode","    :)")
 			iface.messageBar().pushWidget(widget, QgsMessageBar.INFO)
 			#it2=-1
