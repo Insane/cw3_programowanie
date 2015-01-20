@@ -167,7 +167,7 @@ class Pogoda:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/Pogoda/icon.png'
+        icon_path = 'c:/Users/Samsung/.qgis2/python/plugins/Pogoda/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Pogoda'),
@@ -296,10 +296,12 @@ class Pogoda:
 					y = event.pos().y()
 					point = self.canvas.getCoordinateTransform().toMapCoordinates(x, y)
 					a=QgsTextAnnotationItem(iface.mapCanvas())
+					#a=QgsHtmlAnnotationItem(iface.mapCanvas())
 					for element in warstwa.getFeatures():
 						if element.geometry().contains(point):
 							tekst=" Temperatura: "+str(element.attributes()[warstwa.fieldNameIndex('TEMP')])+" st.C \n Cisnienie: "+str(element.attributes()[warstwa.fieldNameIndex('CISNIENIE')]) +" hPa \n Wilgotnosc: "+str(element.attributes()[warstwa.fieldNameIndex('WILGOTNOSC')])+" jednostek"
 							a.setDocument(QtGui.QTextDocument(tekst))
+							#a.setHTMLPage(tekst)
 							a.setMapPosition(point)
 							a.setFrameSize(QtCore.QSizeF(150,55)) 
 							a.setFrameBackgroundColor(QtGui.QColor("#F5A9A9")) 
@@ -321,10 +323,9 @@ class Pogoda:
 			
 			tool=PointTool(iface.mapCanvas())
 			iface.mapCanvas().setMapTool(tool)
-			
 
 			widget = iface.messageBar().createMessage("Kliknij na wojewodztwo a zobaczysz pogode","    :)")
-			iface.messageBar().pushWidget(widget, QgsMessageBar.INFO)
+			iface.messageBar().pushWidget(widget, QgsMessageBar.INFO,3)
 			#it2=-1
 			#for element in warstwa.getFeatures():
 				#it2=it2+1
